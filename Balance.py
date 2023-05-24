@@ -18,49 +18,41 @@ y_prev = 0
 x_vel = 0
 y_vel = 0
 
+# Discretized state space matrices for the ball
 Ad = np.array([[1, 0, 0, 0],[0, 1, 0, 0],[0, 0, 1, 0],[0, 0, 0, 1]])
 Bd = np.array([[0.005, 0],[0.1, 0],[0, 0.005],[0, 0.1]])
+
+# Begining of a Kalman filter
 H = np.array([[1, 0, 0, 0],[0, 0, 1, 0]])
 kalman = np.array([[0.1412, 0],[0.0932, 0],[0, 0.1412],[0, 0.0932]])
+
+# State vector of the ball
 state = np.array([[0],[0],[0],[0]])
+
+# Angles of the platform along its x and y axes
 alpha = np.array([0])
 beta = np.array([0])
 
+
 def predict(Ad, Bd, state, alpha, beta):
+    # Function for the Kalman prediction step
     u = np.array([alpha,beta])
     predicted_states = Ad@state 
     return predicted_states
     
     
 def update(state, measurement, H, kalman):
+    # Function for the Kalman update step
     v = measurement + H@state
     updated_estimate = state + kalman@v
     return updated_estimate
     
 
-
 def circcirc(x1, y1, r1, x2, y2, r2):
-    """
-    Find the intersection points of two circles in the plane.
- 
-    Parameters:
-    x1, y1 : float
-        The x and y coordinates of the center of the first circle.
-    r1 : float
-        The radius of the first circle.
-    x2, y2 : float
-        The x and y coordinates of the center of the second circle.
-    r2 : float
-        The radius of the second circle.
- 
-    Returns:
-    points : list of tuples
-        A list of tuples representing the intersection points.
-    """
+    # Function for finding the intersections of two circles
+    # located at x1 y1 and x2 y2 with their respective radiuses r1 and r2.
+    # This function is used for the inverse kinematics of the platform
     d = np.sqrt((x2-x1) ** 2 + (y2 - y1) **2)
-    if d > r1 + r2 or d < abs(r1-r2):
-        print("It all shit to hell")
-        return[]
     a = (r1 **2 - r2 ** 2 + d ** 2) / (2 * d)
     h = np.sqrt(r1**2 - a **2)
     x3 = x1 + a * (x2 - x1) / d
@@ -76,8 +68,8 @@ def inverseKinematics(alfa, beta):
     R = 12           #Radius top
     r = 5            #radius bottom
     H = 10           #Height from base to plate
-    L1 = 6          #Servo lower arm
-    L2 = 12         #Servo upper arm
+    L1 = 6           #Servo lower arm
+    L2 = 12          #Servo upper arm
     theta1 = 0 
     theta2 = 0
     theta3 = 0
@@ -144,22 +136,12 @@ def undistort(image, camera_matrix, dist_coeffs):
 def gaussian_blur(img, kernel_size, sigma):
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), sigma)
 
+# Camera resolution
 frame_length = 128
 
 cap = cv2.VideoCapture(0)  # 0 for the first camera module connected
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_length)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_length)
-
-# Funkar med 200 200
-#dp = 0.1           # The inverse ratio of the accumulator resolution to the image resolution,     
-#minDist = 10000    # The minimum distance between the centers of detected circles
-#param1 = 35        # The higher threshold of the two Canny edge detection thresholds used in the Hough transform
-#param2 = 15         # The accumulator threshold for circle detection. Only circles with a vote count greater than param2 are detected
-#minRadius = 10     # The minimum radius of the circles to be detected
-#maxRadius = 18     # The maximum radius of the circles to be detected
-#low_threshold = 10
-#high_threshold = 30
-
 
 dp = 0.1           # The inverse ratio of the accumulator resolution to the image resolution,     
 minDist = 10000    # The minimum distance between the centers of detected circles
@@ -173,7 +155,6 @@ high_threshold = 30
 while True:
     start = time.time()
 
-    
     ret, frame = cap.read()  # ret = True if frame is read correctly
     if not ret:
         break
@@ -189,22 +170,18 @@ while True:
     #frame = cv2.resize(frame, (200, 200))
     
     # Apply Gaussian blur with a kernel size of 5x5 and sigma value of 0
-    #blurred_frame = cv2.GaussianBlur(frame, (21, 21), 0)
     blurred_frame = cv2.GaussianBlur(frame, (11,11), 0)
     
     # Find edges with Canny algorithm
-    
     edges = cv2.Canny(blurred_frame, low_threshold, high_threshold)
 
     # Define Hough circle parameters
     image = edges       # The input image
 
-
     # Find circles using Hough circle transform
     circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, dp, minDist, param1=param1, param2=param2, minRadius=minRadius, maxRadius=maxRadius)
 
     # Draw detected circles on the original image NOT NEEDED LATER
-    #
     if circles is not None:
         circles = np.uint16(np.around(circles))
         for i in circles[0, :]:
@@ -212,7 +189,6 @@ while True:
             cv2.circle(frame, (i[0], i[1]), i[2], (0, 255, 0), 2)
             # draw the center of the circle
             cv2.circle(frame, (i[0], i[1]), 2, (0, 0, 255), 3)
-
 
     # Display the original and blurred frames side by side
     cv2.imshow('Original Frame', frame)
@@ -226,7 +202,6 @@ while True:
         
         y_meas = circles[0][0][0]*2/frame_length - 1
         x_meas = circles[0][0][1]*2/frame_length - 1
-        
         
         x = x_meas
         y = y_meas
@@ -251,55 +226,19 @@ while True:
             y_vel = -vel_cap
         elif(y_vel > vel_cap):
             y_vel = vel_cap
-         
-         
-        
-        #print(x_meas)
-        #print(y_meas)
-        
-        
         
         x_prev = x
         y_prev = y
         
         state = np.array([[x],[x_vel] ,[y],[y_vel]])
-        #state = np.array([[x],[0] ,[y],[0]])
         
         tuning_value = 0.2
         K = np.array([[tuning_value, 0.3033, 0, 0],[0, 0, tuning_value, 0.3033]])
-        
-        #K = np.array([[0.9551, 1.3821, 0, 0],[0, 0, 0.9551, 1.3821]])
-        
-        # Denna funkar typ
-        #K = np.array([[0.2916, 0.2437, 0, 0],[0, 0, 0.2916, 0.2437]])
-        
-        
-        
-        # TOO NICE
-        #K = np.array([[0.2688, 2.7865, 0, 0],[0, 0, 0.2688, 2.7865]])
-        
-        
-        # Update the estimated states
-        #state = update(predict(Ad,Bd,state,alpha,beta),measurement,H,kalman)
-        #state[1] = 0
-        #state[3] = 0
-        
         
         u = K @ state
         alfa = u[0]
         beta = -u[1]
         print("_____")
-        #print(state[0])
-        #print(state[1])
-        #print(state[2])
-        #print(state[3])
-        #print(alfa)
-        #print(beta)
-
-        #alfa = np.deg2rad(0)
-        #beta = np.deg2rad(0)
-
-        #start_time = time.time()
         
         plate_angle_max = np.array([0.4])
         plate_angle_min = np.array([-0.4])
@@ -313,33 +252,17 @@ while True:
             beta = plate_angle_max
         elif beta < plate_angle_min:
             beta = plate_angle_min
-
-        #print(alfa)
-        #print(beta)
         
         values = inverseKinematics(alfa, beta)
         
         if __name__ == '__main__':
             ser = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
             ser.reset_input_buffer()
-            #while True:
-            
-            #alfa = np.deg2rad(30/2*np.sin(5*time.time()))
-            #beta = np.deg2rad(30/2*np.cos(5*time.time()))
 
             values = inverseKinematics(alfa, beta)
-            #print(values)
 
             string = "," +str(values[0]) + "," + str(values[1]) + "," + str(values[2]) + "\n"
             string = bytes(string, 'utf-8') 
             ser.write(string)
-            #time.sleep(0.5)
             
-        
-    
-    #print(elapsed)
-
-
-#cap.release()
-#cv2.destroyAllWindows()
 
