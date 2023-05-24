@@ -76,8 +76,8 @@ def inverseKinematics(alfa, beta):
     R = 12           #Radius top
     r = 5            #radius bottom
     H = 10           #Height from base to plate
-    L1 = 6          #Servo lower arm
-    L2 = 12         #Servo upper arm
+    L1 = 6           #Servo lower arm
+    L2 = 12          #Servo upper arm
     theta1 = 0 
     theta2 = 0
     theta3 = 0
@@ -165,7 +165,7 @@ dp = 0.1           # The inverse ratio of the accumulator resolution to the imag
 minDist = 10000    # The minimum distance between the centers of detected circles
 param1 = 50        # The higher threshold of the two Canny edge detection thresholds used in the Hough transform
 param2 = 14        # The accumulator threshold for circle detection. Only circles with a vote count greater than param2 are detected
-minRadius = 6     # The minimum radius of the circles to be detected
+minRadius = 6      # The minimum radius of the circles to be detected
 maxRadius = 12     # The maximum radius of the circles to be detected
 low_threshold = 10
 high_threshold = 30
@@ -193,12 +193,10 @@ while True:
     blurred_frame = cv2.GaussianBlur(frame, (11,11), 0)
     
     # Find edges with Canny algorithm
-    
     edges = cv2.Canny(blurred_frame, low_threshold, high_threshold)
 
     # Define Hough circle parameters
     image = edges       # The input image
-
 
     # Find circles using Hough circle transform
     circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, dp, minDist, param1=param1, param2=param2, minRadius=minRadius, maxRadius=maxRadius)
@@ -252,13 +250,10 @@ while True:
         elif(y_vel > vel_cap):
             y_vel = vel_cap
          
-         
-        
+
         #print(x_meas)
         #print(y_meas)
-        
-        
-        
+
         x_prev = x
         y_prev = y
         
