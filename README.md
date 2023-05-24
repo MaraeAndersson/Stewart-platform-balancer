@@ -1,4 +1,4 @@
-# Stewart platform balancer
+# Stewart platform balancer (WIP)
 By Martin Andersson and Oliver Moberg
 
 ## Description
